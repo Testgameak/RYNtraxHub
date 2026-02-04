@@ -1,8 +1,3 @@
---[[
-    Abacaxi Hub - Optimized Version
-    Performance & Code Quality Improvements
-]]
-
 -- Cache all services at start for better performance
 local Services = setmetatable({}, {
     __index = function(self, serviceName)
@@ -16,7 +11,7 @@ local function NotificacaoNightMystic(titulo, mensagem)
     local success = pcall(function()
         local TweenService = Services.TweenService
         local CoreGui = Services.CoreGui
-        local LogoID = "rbxassetid://115377474207871"
+        local LogoID = "rbxassetid://126329543253349"
 
         local ScreenGui = Instance.new("ScreenGui")
         ScreenGui.Name = "NM_Notify"
@@ -2482,82 +2477,82 @@ imageButton.MouseButton1Click:Connect(function()
 end)
 local Discord = Library:MakeTab({
     Title = "Discord",
-    Icon = "rbxassetid://73132811772878"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Status = Library:MakeTab({
     Title = "Status And Server",
-    Icon = "rbxassetid://7040410130"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Shop = Library:MakeTab({
     Title = "Shop",
-    Icon = "rbxassetid://6031265976"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Farm = Library:MakeTab({
     Title = "Tab Farming",
-    Icon = "rbxassetid://127561653320876"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Maestry = Library:MakeTab({
     Title = "Tab Farm Maestry",
-    Icon = "rbxassetid://10709782497"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Others = Library:MakeTab({
     Title = "Tab Farm Others",
-    Icon = "rbxassetid://10723405360"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Event = Library:MakeTab({
     Title = "Tab Sea Event",
-    Icon = "rbxassetid://10709783577"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Race = Library:MakeTab({
     Title = "Tab Race Upgrade",
-    Icon = "rbxassetid://115164375298022"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Dojo = Library:MakeTab({
     Title = "Tab Dojo Quest & Drago Race",
-    Icon = "rbxassetid://91920478152016"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Esp = Library:MakeTab({
     Title = "Tab Stats & ESP",
-    Icon = "rbxassetid://11155851001"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Player = Library:MakeTab({
     Title = "Tab Local Player",
-    Icon = "rbxassetid://13075651575"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Teleport = Library:MakeTab({
     Title = "Tab Teleport",
-    Icon = "rbxassetid://10734886004"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Get = Library:MakeTab({
     Title = "Tab Get Items & Upgrade",
-    Icon = "rbxassetid://13075622619"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Fruit = Library:MakeTab({
     Title = "Tab Raid & Fruit",
-    Icon = "rbxassetid://11155986081"
+    Icon = "rbxassetid://126329543253349"
 })
 
 local Setting = Library:MakeTab({
     Title = "Tab Settings & Misc",
-    Icon = "rbxassetid://7734053495"
+    Icon = "rbxassetid://126329543253349"
 })
 Discord:AddDiscordInvite({
     Name = "Abacaxi Hub",
     Description = "Join for support and updates",
-    Logo = "rbxassetid://115377474207871",
+    Logo = "rbxassetid://126329543253349",
     Invite = "https://discord.gg/A2pMghhd"
 })
 local credits = Discord:AddParagraph({
