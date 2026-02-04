@@ -1,3 +1,6 @@
+-- WHITE + TRANSPARENT UI VERSION
+-- Background transparency handled via UI elements
+
 local MarketplaceService = game:GetService("MarketplaceService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -12,73 +15,25 @@ local CoreGui = (gethui and gethui()) or game:GetService("CoreGui");
 
 local redzlib = {
 	Themes = {
-
--- ===== BLUE GLASS HACKER THEME (EXTRA TRANSPARENT / NO NEON) =====
-BlueGlassHacker = {
-    -- NỀN CHÍNH: XANH ĐẬM + TRONG SUỐT (GLASS)
-    ["Color Hub 1"] = ColorSequence.new({
-        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(10, 25, 45)),
-        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(12, 35, 60)),
-        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(10, 25, 45))
-    }),
-
-    -- PANEL / TAB: XANH KÍNH
-    ["Color Hub 2"] = Color3.fromRGB(18, 45, 75),
-
-    -- VIỀN: XANH HACKER TRẦM
-    ["Color Stroke"] = Color3.fromRGB(230, 230, 230), -- viền trắng
-
-    -- MÀU CHỦ ĐỀ (KHÔNG NEON)
-    ["Color Theme"] = Color3.fromRGB(70, 130, 180),
-
-    -- CHỮ
-    ["Color Text"] = Color3.fromRGB(160, 210, 255),
-    ["Color Dark Text"] = Color3.fromRGB(120, 170, 220)
-},
-
-
--- ===== BLUE TRANSPARENT THEME (NEW) =====
-BlueTransparent = {
-    -- NỀN TRONG SUỐT (Hub)
-    ["Color Hub 1"] = ColorSequence.new({
-        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(0, 120, 255)),
-        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 150, 255)),
-        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(0, 120, 255))
-    }),
-
-    -- PANEL / TAB (XANH NHẠT)
-    ["Color Hub 2"] = Color3.fromRGB(200, 230, 255),
-
-    -- VIỀN
-    ["Color Stroke"] = Color3.fromRGB(0, 140, 255),
-
-    -- MÀU CHỦ ĐỀ
-    ["Color Theme"] = Color3.fromRGB(0, 170, 255),
-
-    -- CHỮ
-    ["Color Text"] = Color3.fromRGB(0, 120, 255),
-    ["Color Dark Text"] = Color3.fromRGB(0, 90, 200)
-},
-
 		Darker = {
 			["Color Hub 1"] = ColorSequence.new({
-				ColorSequenceKeypoint.new(0.00, Color3.fromRGB(25, 25, 25)),
+				ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 255, 255)),
 				ColorSequenceKeypoint.new(0.50, Color3.fromRGB(32.5, 32.5, 32.5)),
-				ColorSequenceKeypoint.new(1.00, Color3.fromRGB(25, 25, 25))
+				ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))
 			}),
-			["Color Hub 2"] = Color3.fromRGB(30, 30, 30),
-			["Color Stroke"] = Color3.fromRGB(40, 40, 40),
-			["Color Theme"] = Color3.fromRGB(88, 101, 242),
+			["Color Hub 2"] = Color3.fromRGB(255, 255, 255),
+			["Color Stroke"] = Color3.fromRGB(255, 255, 255),
+			["Color Theme"] = Color3.fromRGB(255, 255, 255),
 			["Color Text"] = Color3.fromRGB(243, 243, 243),
 			["Color Dark Text"] = Color3.fromRGB(180, 180, 180)
 		},
 		Yellow = {
     ["Color Hub 1"] = ColorSequence.new({
         ColorSequenceKeypoint.new(0.00, Color3.fromRGB(35, 35, 35)),
-        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(45, 45, 45)),
+        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(255, 255, 255)),
         ColorSequenceKeypoint.new(1.00, Color3.fromRGB(35, 35, 35))
     }),
-    ["Color Hub 2"] = Color3.fromRGB(40, 40, 40),
+    ["Color Hub 2"] = Color3.fromRGB(255, 255, 255),
     ["Color Stroke"] = Color3.fromRGB(180, 150 , 40),
 
     ["Color Theme"] = Color3.fromRGB(255, 200, 40),
@@ -88,13 +43,13 @@ BlueTransparent = {
 },
 		Dark = {
 			["Color Hub 1"] = ColorSequence.new({
-				ColorSequenceKeypoint.new(0.00, Color3.fromRGB(40, 40, 40)),
+				ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 255, 255)),
 				ColorSequenceKeypoint.new(0.50, Color3.fromRGB(47.5, 47.5, 47.5)),
-				ColorSequenceKeypoint.new(1.00, Color3.fromRGB(40, 40, 40))
+				ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))
 			}),
-			["Color Hub 2"] = Color3.fromRGB(45, 45, 45),
+			["Color Hub 2"] = Color3.fromRGB(255, 255, 255),
 			["Color Stroke"] = Color3.fromRGB(65, 65, 65),
-			["Color Theme"] = Color3.fromRGB(65, 150, 255),
+			["Color Theme"] = Color3.fromRGB(255, 255, 255),
 			["Color Text"] = Color3.fromRGB(245, 245, 245),
 			["Color Dark Text"] = Color3.fromRGB(190, 190, 190)
 		},
@@ -104,21 +59,21 @@ BlueTransparent = {
 				ColorSequenceKeypoint.new(0.50, Color3.fromRGB(32.5, 32.5, 32.5)),
 				ColorSequenceKeypoint.new(1.00, Color3.fromRGB(27.5, 25, 30))
 			}),
-			["Color Hub 2"] = Color3.fromRGB(30, 30, 30),
-			["Color Stroke"] = Color3.fromRGB(40, 40, 40),
-			["Color Theme"] = Color3.fromRGB(150, 0, 255),
+			["Color Hub 2"] = Color3.fromRGB(255, 255, 255),
+			["Color Stroke"] = Color3.fromRGB(255, 255, 255),
+			["Color Theme"] = Color3.fromRGB(255, 255, 255),
 			["Color Text"] = Color3.fromRGB(240, 240, 240),
 			["Color Dark Text"] = Color3.fromRGB(180, 180, 180)
 		},
 		NierAutomata = {
 			["Color Hub 1"] = ColorSequence.new({
-				ColorSequenceKeypoint.new(0.00, Color3.fromRGB(15, 15, 15)),
+				ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 255, 255)),
 				ColorSequenceKeypoint.new(0.50, Color3.fromRGB(20, 20, 20)),
-				ColorSequenceKeypoint.new(1.00, Color3.fromRGB(15, 15, 15))
+				ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))
 			}),
-			["Color Hub 2"] = Color3.fromRGB(18, 18, 18),
-			["Color Stroke"] = Color3.fromRGB(40, 40, 40),
-			["Color Theme"] = Color3.fromRGB(218, 165, 32), -- Dourado da 2B
+			["Color Hub 2"] = Color3.fromRGB(255, 255, 255),
+			["Color Stroke"] = Color3.fromRGB(255, 255, 255),
+			["Color Theme"] = Color3.fromRGB(255, 255, 255), -- Dourado da 2B
 			["Color Text"] = Color3.fromRGB(255, 255, 255),
 			["Color Dark Text"] = Color3.fromRGB(180, 180, 180)
 		}
@@ -129,7 +84,7 @@ BlueTransparent = {
 	Save = {
 		UISize = {700, 400},
 		TabSize = 160,
-		Theme = "BlueGlassHacker" -- NierAutomata"
+		Theme = "NierAutomata"
 	},
 	Settings = {},
 	Connection = {},
