@@ -26,7 +26,7 @@ BlueGlassHacker = {
     ["Color Hub 2"] = Color3.fromRGB(18, 45, 75),
 
     -- VIỀN: XANH HACKER TRẦM
-    ["Color Stroke"] = Color3.fromRGB(40, 90, 140),
+    ["Color Stroke"] = Color3.fromRGB(230, 230, 230), -- viền trắng
 
     -- MÀU CHỦ ĐỀ (KHÔNG NEON)
     ["Color Theme"] = Color3.fromRGB(70, 130, 180),
