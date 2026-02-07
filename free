@@ -1,5 +1,5 @@
--- dc: @vyxonq
-
+local String = "xNT3LG74sgUPupiMF0B5ybRQkmKtH"
+-- concatenated later with other strings
 local Service = game:GetService("TweenService")
 local Inst = Instance.new("ScreenGui")
 Inst.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
