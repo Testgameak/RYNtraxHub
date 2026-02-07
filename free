@@ -1703,7 +1703,7 @@ Function6 = function(Param)
                             elseif game.Players.LocalPlayer.Character:FindFirstChild("Electro") then
                                 Value.activeController.timeToNextAttack = 2
                             else
-                                Value.activeController.timeToNextAttack = 0
+                                Value.activeController.timeToNextAttack = 2
                             end
                             Value.activeController.attacking = false
                             Value.activeController.increment = 3
