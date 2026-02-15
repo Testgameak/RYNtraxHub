@@ -1,0 +1,648 @@
+--=============================================
+-- VUA HUB V3.6 - EXTREME POTATO (ANTI-DRAGON/RUMBLE)
+-- UPDATED: UI TITLE CHANGED TO V3⁶
+--=============================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService") 
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Workspace = game:GetService("Workspace")
+
+-- ⚙️ CẤU HÌNH ẢNH ICON
+local ICON_URL = "https://i.postimg.cc/CxVT8gR0/IMG_20260117_103241.jpg"
+local ICON_FILE = "VuaHub_Icon_V3.jpg"
+local MENU_BG_ID = "rbxassetid://7112218123"
+local CLICK_SOUND_ID = "rbxassetid://132422877448930" 
+
+-- ⚙️ CẤU HÌNH CHỨC NĂNG
+local SETTINGS = {
+    Speed = 2, 
+    JumpHeight = 50, 
+    HitboxSize = 60,
+    HitboxActive = false,
+    AimbotActive = false,
+    ESPActive = false,
+    FixLagActive = false, 
+    AimbotRange = 2500,
+    AimDrop = 7,
+    DangerZone = 600, 
+    TPSpinActive = false,
+    SpinSpeed = 36, 
+    SpinRadius = 15
+}
+
+-- Xóa UI cũ
+if game.CoreGui:FindFirstChild("VuaHub_V3") then
+    game.CoreGui.VuaHub_V3:Destroy()
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "VuaHub_V3"
+gui.Parent = game.CoreGui
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+--================ TẠO ÂM THANH =================
+local sound = Instance.new("Sound", gui)
+sound.Name = "OpenSound"
+sound.SoundId = CLICK_SOUND_ID
+sound.Volume = 10 
+sound.Looped = false
+
+--================ NÚT MENU (ICON) =================
+local toggleBtn = Instance.new("ImageButton", gui)
+toggleBtn.Size = UDim2.new(0, 65, 0, 65) 
+toggleBtn.Position = UDim2.new(0.03, 0, 0.4, 0)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+toggleBtn.BackgroundTransparency = 0 
+toggleBtn.ZIndex = 10 
+
+-- XỬ LÝ TẢI ẢNH TỪ WEB
+task.spawn(function()
+    pcall(function()
+        if not isfile(ICON_FILE) then
+            local content = game:HttpGet(ICON_URL)
+            writefile(ICON_FILE, content)
+        end
+        toggleBtn.Image = getcustomasset(ICON_FILE)
+    end)
+end)
+
+Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(0.2, 0)
+local stroke = Instance.new("UIStroke", toggleBtn)
+stroke.Color = Color3.fromRGB(255, 255, 0)
+stroke.Thickness = 3
+
+--================ MENU CHÍNH =================
+local menuFrame = Instance.new("Frame", gui)
+menuFrame.Size = UDim2.new(0, 260, 0, 420) 
+menuFrame.Position = UDim2.new(0.2, 0, 0.2, 0)
+menuFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 18) 
+menuFrame.Visible = false
+menuFrame.ClipsDescendants = true 
+Instance.new("UICorner", menuFrame).CornerRadius = UDim.new(0, 12)
+Instance.new("UIStroke", menuFrame).Color = Color3.fromRGB(255, 255, 0)
+
+-- HÌNH NỀN MENU
+local bgImage = Instance.new("ImageLabel", menuFrame)
+bgImage.Name = "MenuBackground"
+bgImage.Size = UDim2.new(1, 0, 1, 0)
+bgImage.Position = UDim2.new(0, 0, 0, 0)
+bgImage.BackgroundTransparency = 1
+bgImage.Image = MENU_BG_ID
+bgImage.ScaleType = Enum.ScaleType.Stretch 
+bgImage.ZIndex = 1 
+bgImage.ImageTransparency = 0.2 
+
+-- Lớp phủ tối
+local darkOverlay = Instance.new("Frame", menuFrame)
+darkOverlay.Size = UDim2.new(1, 0, 1, 0)
+darkOverlay.BackgroundColor3 = Color3.new(0,0,0)
+darkOverlay.BackgroundTransparency = 0.6 
+darkOverlay.ZIndex = 2
+
+-- === TITLE: HIỆU ỨNG AURA MỊN (SMOOTH ANIMATION) ===
+local title = Instance.new("TextLabel", menuFrame)
+title.Size = UDim2.new(1, 0, 0, 60)
+title.BackgroundTransparency = 1
+title.RichText = true 
+-- ĐÃ CHỈNH SỬA TÊN THÀNH V3 VỚI SỐ 6 NHỎ (SUPERSCRIPT)
+title.Text = "👑 Vua Hub V3<font size='10'>⁶</font> 👑\n" .. LocalPlayer.Name
+title.TextColor3 = Color3.fromRGB(10, 10, 10) 
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 17 
+title.TextWrapped = true
+title.ZIndex = 5
+
+-- VIỀN AURA TÍM (UIStroke)
+local auraStroke = Instance.new("UIStroke", title)
+auraStroke.Thickness = 2 
+auraStroke.Transparency = 0
+auraStroke.Color = Color3.fromRGB(255, 255, 255) 
+
+-- DẢI MÀU (Gradient)
+local gradient = Instance.new("UIGradient", auraStroke)
+gradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(140, 20, 255)),    
+    ColorSequenceKeypoint.new(0.3, Color3.fromRGB(255, 120, 255)), 
+    ColorSequenceKeypoint.new(0.6, Color3.fromRGB(30, 0, 60)),     
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 20, 255))     
+})
+gradient.Rotation = 0
+
+-- SCRIPT CHẠY HIỆU ỨNG (ANIMATION 60FPS)
+task.spawn(function()
+    local rot = 0
+    RunService.RenderStepped:Connect(function(dt)
+        rot = rot + (60 * dt) 
+        if rot > 360 then rot = 0 end
+        gradient.Rotation = rot
+    end)
+end)
+
+local scroll = Instance.new("ScrollingFrame", menuFrame)
+scroll.Size = UDim2.new(0.92, 0, 0.82, -10)
+scroll.Position = UDim2.new(0.04, 0, 0.16, 0)
+scroll.BackgroundTransparency = 1
+scroll.ScrollBarThickness = 3
+scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 0)
+scroll.ZIndex = 3 
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0, 10)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+--=== HÀM UI ===
+local function createBtn(text, color, callback)
+    local btn = Instance.new("TextButton", scroll)
+    btn.Size = UDim2.new(0.98, 0, 0, 42)
+    btn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+    btn.BackgroundTransparency = 0.3 
+    btn.Text = text
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.ZIndex = 4
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    
+    local active = false
+    btn.MouseButton1Click:Connect(function()
+        active = not active
+        btn.BackgroundColor3 = active and color or Color3.fromRGB(25, 25, 30)
+        btn.Text = text .. (active and " [ON]" or "")
+        callback(active)
+    end)
+end
+
+local function createSlider(text, min, max, default, color, callback)
+    local frame = Instance.new("Frame", scroll)
+    frame.Size = UDim2.new(0.98, 0, 0, 48)
+    frame.BackgroundTransparency = 1
+    frame.ZIndex = 4
+    
+    local label = Instance.new("TextLabel", frame)
+    label.Size = UDim2.new(1, 0, 0, 20)
+    label.BackgroundTransparency = 1
+    label.Text = text .. ": " .. default
+    label.TextColor3 = Color3.new(1,1,1)
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 11
+    label.ZIndex = 4
+    
+    local bar = Instance.new("TextButton", frame)
+    bar.Size = UDim2.new(1, 0, 0, 8)
+    bar.Position = UDim2.new(0, 0, 0.6, 0)
+    bar.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    bar.Text = ""
+    bar.ZIndex = 4
+    Instance.new("UICorner", bar).CornerRadius = UDim.new(1,0)
+    
+    local fill = Instance.new("Frame", bar)
+    fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0)
+    fill.BackgroundColor3 = color
+    fill.ZIndex = 4
+    Instance.new("UICorner", fill).CornerRadius = UDim.new(1,0)
+    
+    local dragging = false
+    local function move(input)
+        local p = math.clamp((input.Position.X - bar.AbsolutePosition.X)/bar.AbsoluteSize.X, 0, 1)
+        fill.Size = UDim2.new(p, 0, 1, 0)
+        local val = (min + (max-min)*p)
+        if max > 10 then val = math.floor(val) else val = math.floor(val*10)/10 end
+        label.Text = text .. ": " .. val
+        callback(val)
+    end
+    bar.InputBegan:Connect(function(inp) if inp.UserInputType == Enum.UserInputType.Touch or inp.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true; move(inp) end end)
+    UserInputService.InputEnded:Connect(function(inp) if inp.UserInputType == Enum.UserInputType.Touch or inp.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+    UserInputService.InputChanged:Connect(function(inp) if dragging and (inp.UserInputType == Enum.UserInputType.Touch or inp.UserInputType == Enum.UserInputType.MouseMovement) then move(inp) end end)
+end
+
+--================ ESP =================
+local ESP_Table = {}
+local function CreateESP(player)
+    local Objects = {
+        Tracer = Drawing.new("Line"),
+        Name = Drawing.new("Text"),
+        HealthBarOutline = Drawing.new("Square"),
+        HealthBarFill = Drawing.new("Square")
+    }
+    Objects.Tracer.Thickness = 1.5
+    Objects.Tracer.Color = Color3.fromRGB(255, 0, 0)
+    Objects.Tracer.Transparency = 1
+    Objects.Name.Size = 16
+    Objects.Name.Center = true
+    Objects.Name.Outline = true
+    Objects.Name.Color = Color3.fromRGB(255, 255, 255)
+    Objects.HealthBarOutline.Thickness = 1
+    Objects.HealthBarOutline.Color = Color3.new(0,0,0)
+    Objects.HealthBarOutline.Filled = false
+    Objects.HealthBarFill.Color = Color3.new(0,1,0)
+    Objects.HealthBarFill.Filled = true
+    ESP_Table[player] = Objects
+end
+
+local function RemoveESP(player)
+    if ESP_Table[player] then
+        for _, drawing in pairs(ESP_Table[player]) do drawing:Remove() end
+        ESP_Table[player] = nil
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    if not SETTINGS.ESPActive then 
+        for _, tbl in pairs(ESP_Table) do for _, v in pairs(tbl) do v.Visible = false end end
+        return 
+    end
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then
+            if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                if not ESP_Table[p] then CreateESP(p) end
+                local hrp = p.Character.HumanoidRootPart
+                local hum = p.Character.Humanoid
+                local vec, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                local objs = ESP_Table[p]
+                
+                if onScreen then
+                    objs.Tracer.Visible = true
+                    objs.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                    objs.Tracer.To = Vector2.new(vec.X, vec.Y)
+                    objs.Name.Visible = true
+                    objs.Name.Text = p.Name .. " [" .. math.floor(hum.Health) .. "]"
+                    objs.Name.Position = Vector2.new(vec.X, vec.Y - 40 * (2000 / vec.Z))
+                    local height = math.clamp(50 * (100 / vec.Z), 2, 500)
+                    local width = 6
+                    local offset = math.clamp(30 * (100 / vec.Z), 2, 300)
+                    objs.HealthBarOutline.Visible = true
+                    objs.HealthBarOutline.Size = Vector2.new(width, height)
+                    objs.HealthBarOutline.Position = Vector2.new(vec.X - offset, vec.Y - height/2)
+                    objs.HealthBarFill.Visible = true
+                    local healthHeight = (hum.Health / hum.MaxHealth) * height
+                    objs.HealthBarFill.Size = Vector2.new(width - 2, healthHeight)
+                    objs.HealthBarFill.Position = Vector2.new(vec.X - offset + 1, vec.Y + height/2 - healthHeight)
+                    objs.HealthBarFill.Color = Color3.fromHSV((hum.Health / hum.MaxHealth) * 0.3, 1, 1)
+                else
+                    for _, v in pairs(objs) do v.Visible = false end
+                end
+            else
+                if ESP_Table[p] then for _, v in pairs(ESP_Table[p]) do v.Visible = false end end
+            end
+        end
+    end
+end)
+Players.PlayerRemoving:Connect(RemoveESP)
+
+createBtn("👁️ ESP FULL", Color3.fromRGB(255, 0, 0), function(state) SETTINGS.ESPActive = state end)
+
+--================ FIX LAG & NO SHAKE (EXTREME) =================
+local function NukeEffect(v)
+    -- Danh sách đen các tên hiệu ứng gây lag (Dragon, Rumble, Gun)
+    local BadNames = {
+        "dragon", "fire", "flame", "breath", "burn", -- Trái Rồng
+        "thunder", "lightning", "storm", "electric", "volt", "rumble", -- Trái Lôi
+        "muzzle", "flash", "beam", "bullet", "projectile", "impact", "hit", "smoke", -- Súng
+        "effect", "trail", "particle" -- Chung
+    }
+
+    if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Explosion") or v:IsA("Sparkles") or v:IsA("Highlight") then
+        v.Enabled = false 
+        if v:IsA("Explosion") then v:Destroy() end
+    
+    elseif v:IsA("Decal") or v:IsA("Texture") then
+        v:Destroy()
+    
+    elseif v:IsA("BasePart") or v:IsA("MeshPart") then
+        local name = v.Name:lower()
+        local isBad = false
+        for _, bad in pairs(BadNames) do
+            if name:find(bad) then isBad = true; break end
+        end
+
+        if isBad then
+            v.Transparency = 1
+            v.Material = Enum.Material.SmoothPlastic
+            v.CanCollide = false
+            if v:IsA("MeshPart") then v.TextureID = "" end
+        end
+        
+        -- Làm mượt part thường
+        if v.Material == Enum.Material.Neon or v.Material == Enum.Material.ForceField or v.Material == Enum.Material.Glass then
+             v.Material = Enum.Material.SmoothPlastic
+             v.Reflectance = 0
+             v.CastShadow = false
+             v.Transparency = 0.5 
+             v.Color = Color3.new(0.5, 0.5, 0.5)
+        end
+    end
+end
+
+local function AggressiveScan()
+    task.spawn(function()
+        pcall(function()
+            local L = game.Lighting
+            L.GlobalShadows = false
+            L.FogEnd = 9e9
+            L.Brightness = 0
+            settings().Rendering.QualityLevel = 1
+            for _, v in pairs(L:GetChildren()) do
+                if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") then
+                    v.Enabled = false
+                end
+            end
+        end)
+        
+        -- Quét map và xóa
+        local count = 0
+        for _, v in pairs(workspace:GetDescendants()) do
+            if not SETTINGS.FixLagActive then break end
+            NukeEffect(v)
+            count = count + 1
+            if count % 1000 == 0 then task.wait() end 
+        end
+        -- Quét Effect trong ReplicatedStorage
+        for _, v in pairs(game.ReplicatedStorage:GetDescendants()) do
+             if not SETTINGS.FixLagActive then break end
+             if v:IsA("ParticleEmitter") or v:IsA("Beam") or v:IsA("Trail") then
+                v.Enabled = false
+             end
+        end
+    end)
+end
+
+local Connection1 = nil
+local Connection2 = nil
+local ShakeLoop = nil
+
+createBtn("🚀 FIX LAG SUPER", Color3.fromRGB(255, 255, 0), function(state)
+    SETTINGS.FixLagActive = state
+    if state then
+        -- 1. Chạy quét lag
+        AggressiveScan()
+        
+        -- 2. Bắt đầu vòng lặp Fix Rung (Brutal Mode - Anti Dragon V)
+        ShakeLoop = task.spawn(function()
+            while SETTINGS.FixLagActive do
+                pcall(function()
+                    local CombatFramework = require(LocalPlayer.PlayerScripts:WaitForChild("CombatFramework"))
+                    local CameraShaker = CombatFramework.CameraShaker
+                    
+                    -- Hủy diệt module rung
+                    CameraShaker.CameraShakeInstance.Magnitude = 0
+                    CameraShaker.CameraShakeInstance.Roughness = 0
+                    CameraShaker.CameraShakeInstance.FadeIn = 0
+                    CameraShaker.CameraShakeInstance.FadeOut = 0
+                    
+                    -- Ghi đè hàm rung thành rỗng
+                    CameraShaker.Start = function() end 
+                    CameraShaker.Shake = function() end
+                    CameraShaker.ShakeOnce = function() end
+                end)
+                task.wait(0.5) -- Check liên tục để chống lại game reset module
+            end
+        end)
+
+        -- 3. Lắng nghe vật thể mới spawn
+        Connection1 = workspace.DescendantAdded:Connect(function(v)
+            if SETTINGS.FixLagActive then NukeEffect(v) end
+        end)
+        Connection2 = game.ReplicatedStorage.DescendantAdded:Connect(function(v)
+             if SETTINGS.FixLagActive then
+                if v:IsA("ParticleEmitter") or v:IsA("Beam") or v:IsA("Trail") then v.Enabled = false end
+            end
+        end)
+    else
+        if Connection1 then Connection1:Disconnect() Connection1 = nil end
+        if Connection2 then Connection2:Disconnect() Connection2 = nil end
+        if ShakeLoop then task.cancel(ShakeLoop) ShakeLoop = nil end
+    end
+end)
+
+--================ AIMBOT (SMART) =================
+createBtn("🎯 AIM LOCK", Color3.fromRGB(0, 255, 128), function(state) SETTINGS.AimbotActive = state end)
+createSlider("Độ Hạ Tâm", 0, 15, 7, Color3.fromRGB(0, 255, 128), function(val) SETTINGS.AimDrop = val end)
+
+--================ HITBOX (150) =================
+createBtn("🥊 HITBOX", Color3.fromRGB(255, 120, 0), function(state) 
+    SETTINGS.HitboxActive = state 
+    if not state then 
+         for _, p in pairs(Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+                p.Character.HumanoidRootPart.Transparency = 1
+                p.Character.HumanoidRootPart.Shape = Enum.PartType.Block
+            end
+        end
+    end
+end)
+createSlider("Kích thước", 5, 150, 60, Color3.fromRGB(255, 120, 0), function(val) SETTINGS.HitboxSize = val end)
+
+--================ TP SPIN SMART =================
+createBtn("🌀 TP SPIN", Color3.fromRGB(170, 0, 255), function(state) 
+    SETTINGS.TPSpinActive = state 
+end)
+
+createSlider("Tốc độ Xoay", 1, 36, 36, Color3.fromRGB(170, 0, 255), function(val) 
+    SETTINGS.SpinSpeed = val 
+end)
+createSlider("Bán Kính", 5, 50, 15, Color3.fromRGB(170, 0, 255), function(val) 
+    SETTINGS.SpinRadius = val 
+end)
+
+createSlider("Speed CFrame", 0, 10, 2, Color3.fromRGB(0, 200, 255), function(val) SETTINGS.Speed = val end)
+createSlider("Nhảy Cao", 50, 350, 50, Color3.fromRGB(255, 0, 255), function(val) 
+    SETTINGS.JumpHeight = val 
+end)
+
+--================ LOGIC AIMBOT =================
+local function GetTarget()
+    local target = nil
+    local closestDist = math.huge
+    local closestTarget = nil
+    local minHealth = math.huge
+    local weakTarget = nil
+    
+    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return nil end
+    
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+            local targetPart = p.Character:FindFirstChild("HumanoidRootPart")
+            if targetPart then
+                local dist = (myRoot.Position - targetPart.Position).Magnitude
+                local health = p.Character.Humanoid.Health
+                
+                if dist < SETTINGS.AimbotRange then
+                    if dist < closestDist then
+                        closestDist = dist
+                        closestTarget = targetPart
+                    end
+                    if health < minHealth then
+                        minHealth = health
+                        weakTarget = targetPart
+                    end
+                end
+            end
+        end
+    end
+
+    if closestDist < SETTINGS.DangerZone then
+        target = closestTarget
+    else
+        target = weakTarget
+    end
+    
+    return target
+end
+
+--================ LOGIC TP SPIN (UPDATED) =================
+local LockedTarget = nil 
+
+RunService.Heartbeat:Connect(function()
+    if SETTINGS.TPSpinActive then
+        local myChar = LocalPlayer.Character
+        
+        -- 1. TÌM MỤC TIÊU
+        if LockedTarget then
+            local char = LockedTarget.Character
+            if not char or not char:FindFirstChild("Humanoid") or char.Humanoid.Health <= 0 or char:FindFirstChild("ForceField") then
+                LockedTarget = nil 
+            end
+        end
+
+        if not LockedTarget and myChar and myChar:FindFirstChild("HumanoidRootPart") then
+            local myPos = myChar.HumanoidRootPart.Position
+            local closestPlayer = nil
+            local closestDist = math.huge
+            local lowHpPlayer = nil
+            local lowHpDist = math.huge
+
+            for _, v in pairs(Players:GetPlayers()) do
+                if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("Humanoid") and v.Character:FindFirstChild("HumanoidRootPart") then
+                    local hum = v.Character.Humanoid
+                    local hrp = v.Character.HumanoidRootPart
+                    if hum.Health > 0 and not v.Character:FindFirstChild("ForceField") then
+                        local dist = (hrp.Position - myPos).Magnitude
+                        local hpPercent = (hum.Health / hum.MaxHealth) * 100
+                        if hpPercent < 50 then
+                            if dist < lowHpDist then lowHpDist = dist; lowHpPlayer = v end
+                        else
+                            if dist < closestDist then closestDist = dist; closestPlayer = v end
+                        end
+                    end
+                end
+            end
+            LockedTarget = lowHpPlayer or closestPlayer
+        end
+
+        -- 2. THỰC HIỆN TP SPIN (CHAOTIC FAST)
+        if LockedTarget and LockedTarget.Character and LockedTarget.Character:FindFirstChild("HumanoidRootPart") then
+            local spinTarget = LockedTarget.Character.HumanoidRootPart
+            local targetPos = spinTarget.Position
+            
+            -- === THUẬT TOÁN CHAOTIC DOME MỚI ===
+            local t = tick() * SETTINGS.SpinSpeed
+            local rad = SETTINGS.SpinRadius
+
+            local chaosX = math.cos(t) * math.cos(t / 1.7) 
+            local chaosZ = math.sin(t) * math.sin(t / 2.3)
+            local chaosY = math.abs(math.sin(t / 1.5)) 
+            
+            local jitter = math.sin(tick() * 10) * 0.5
+
+            local offX = chaosX * rad + jitter
+            local offZ = chaosZ * rad + jitter
+            local offY = chaosY * rad 
+
+            -- Check đất
+            local rayOrigin = targetPos
+            local rayDirection = Vector3.new(0, -30, 0)
+            local rayParams = RaycastParams.new()
+            rayParams.FilterDescendantsInstances = {LockedTarget.Character, myChar}
+            rayParams.FilterType = Enum.RaycastFilterType.Exclude
+            local rayResult = workspace:Raycast(rayOrigin, rayDirection, rayParams)
+            
+            local groundOffset = 8
+            if rayResult then groundOffset = 14 end
+            
+            local finalY = targetPos.Y + groundOffset + offY 
+            local newPos = Vector3.new(targetPos.X + offX, finalY, targetPos.Z + offZ)
+            
+            if myChar and myChar:FindFirstChild("HumanoidRootPart") then
+                myChar.HumanoidRootPart.CFrame = CFrame.new(newPos, targetPos)
+                myChar.HumanoidRootPart.Velocity = Vector3.zero 
+                myChar.HumanoidRootPart.RotVelocity = Vector3.zero
+            end
+        end
+    else
+        LockedTarget = nil
+    end
+
+    -- SPEED & JUMP
+    if SETTINGS.Speed > 0 then 
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("Humanoid") and char:FindFirstChild("HumanoidRootPart") then
+                local hum = char.Humanoid
+                local hrp = char.HumanoidRootPart
+                if hum.MoveDirection.Magnitude > 0 then
+                    hrp.CFrame = hrp.CFrame + (hum.MoveDirection * SETTINGS.Speed)
+                end
+            end
+        end)
+    end
+    if SETTINGS.JumpHeight > 50 then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("Humanoid") then
+                char.Humanoid.UseJumpPower = true
+                char.Humanoid.JumpPower = SETTINGS.JumpHeight
+            end
+        end)
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if SETTINGS.AimbotActive then
+        local targetPart = GetTarget()
+        if targetPart then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetPart.Position - Vector3.new(0, SETTINGS.AimDrop, 0))
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if SETTINGS.HitboxActive then
+        local rainbowColor = Color3.fromHSV(tick() % 5 / 5, 1, 1)
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = p.Character.HumanoidRootPart
+                if hrp.Size.X ~= SETTINGS.HitboxSize then 
+                    hrp.Size = Vector3.new(SETTINGS.HitboxSize, SETTINGS.HitboxSize, SETTINGS.HitboxSize)
+                    hrp.Transparency = 0.8 
+                    hrp.CanCollide = false
+                    hrp.Material = Enum.Material.Neon
+                    hrp.Shape = Enum.PartType.Ball
+                end
+                hrp.Color = rainbowColor
+            end
+        end
+    end
+end)
+
+--================ DRAG & TOGGLE =================
+local dragging, dragInput, dragStart, startPos
+local function update(input)
+    local delta = input.Position - dragStart
+    toggleBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    menuFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X + 85, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+toggleBtn.InputBegan:Connect(function(inp) if inp.UserInputType == Enum.UserInputType.Touch or inp.UserInputType == Enum.UserInputType.MouseButton1 then dragging=true; dragStart=inp.Position; startPos=toggleBtn.Position end end)
+toggleBtn.InputChanged:Connect(function(inp) if inp.UserInputType==Enum.UserInputType.Touch or inp.UserInputType==Enum.UserInputType.MouseMovement then dragInput=inp end end)
+UserInputService.InputChanged:Connect(function(inp) if inp==dragInput and dragging then update(inp) end end)
+
+toggleBtn.MouseButton1Click:Connect(function()
+    sound:Play() 
+    menuFrame.Visible = not menuFrame.Visible
+end)
