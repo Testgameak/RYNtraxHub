@@ -1,0 +1,67 @@
+-- [[ Optimized Fast Attack Script ]] --
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+
+-- Khai báo các Module và Remotes dựa trên cấu trúc game
+local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
+local RegisterHit = Net:WaitForChild("RE/RegisterHit")
+local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
+
+local Player = Players.LocalPlayer
+
+task.spawn(function()
+    while task.wait() do
+        local Character = Player.Character
+        if not Character then continue end
+        
+        local RootPart = Character:FindFirstChild("HumanoidRootPart")
+        local Tool = Character:FindFirstChildOfClass("Tool")
+        
+        -- Chỉ thực hiện nếu đang cầm vũ khí (Melee, Sword, Blox Fruit, v.v.)
+        if not (RootPart and Tool) then continue end
+        
+        -- Tạo ID xác thực đòn đánh (Dựa trên logic source đã cung cấp)
+        local attackId = tostring(Player.UserId):sub(2, 4) .. tostring(coroutine.running()):sub(11, 15)
+        local hasAttacked = false
+        
+        -- Hàm xử lý gây sát thương
+        local function attackEntity(entity)
+            local targetRoot = entity:FindFirstChild("HumanoidRootPart")
+            local targetHum = entity:FindFirstChild("Humanoid")
+            
+            if targetRoot and targetHum and targetHum.Health > 0 then
+                local distance = (targetRoot.Position - RootPart.Position).Magnitude
+                if distance <= 60 then
+                    -- Kích hoạt RegisterAttack một lần duy nhất mỗi vòng lặp
+                    if not hasAttacked then 
+                        RegisterAttack:FireServer(0) -- Tham số mặc định thường là 0 hoặc math.huge 
+                        hasAttacked = true 
+                    end
+                    
+                    -- Gửi dữ liệu đòn đánh lên Server
+                    -- Cấu trúc: (BasePartTarget, {{Model, RootPart}}, ..., attackId) 
+                    RegisterHit:FireServer(
+                        targetRoot, 
+                        {{entity, targetRoot}}, 
+                        nil, 
+                        nil, 
+                        attackId
+                    )
+                end
+            end
+        end
+
+        -- Quét quái vật (Enemies)
+        for _, enemy in ipairs(workspace.Enemies:GetChildren()) do
+            attackEntity(enemy)
+        end
+
+        -- Quét người chơi khác (Players)
+        for _, otherPlayer in ipairs(Players:GetPlayers()) do
+            if otherPlayer ~= Player and otherPlayer.Character then
+                attackEntity(otherPlayer.Character)
+            end
+        end
+    end
+end)
