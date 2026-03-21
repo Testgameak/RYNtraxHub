@@ -1,0 +1,272 @@
+_G.FastAttack = true;
+
+if _G.FastAttack then
+
+    local _ENV = (getgenv or getrenv or getfenv)();
+
+    local function v0(v35, v36)
+        local v37, v38 = pcall(function()
+            return v35:WaitForChild(v36);
+        end);
+        return v38;
+    end
+
+    local function v1(v39, ...)
+        local v40 = v39;
+        for v60, v61 in {...} do
+            v40 = v40:FindFirstChild(v61) or v0(v40, v61);
+            if not v40 then
+                break;
+            end
+        end
+        return v40;
+    end
+
+    local v2 = game:GetService("VirtualInputManager");
+    local v3 = game:GetService("CollectionService");
+    local v4 = game:GetService("ReplicatedStorage");
+    local v5 = game:GetService("TeleportService");
+    local v6 = game:GetService("RunService");
+    local v7 = game:GetService("Players");
+    local v8 = v7.LocalPlayer;
+    local v9 = v0(v4, "Remotes");
+    if not v9 then
+        return;
+    end
+    local v10 = v0(v9, "Validator");
+    local v11 = v0(v9, "CommF_");
+    local v12 = v0(v9, "CommE");
+    local v13 = v0(workspace, "ChestModels");
+    local v14 = v0(workspace, "_WorldOrigin");
+    local v15 = v0(workspace, "Characters");
+    local v16 = v0(workspace, "Enemies");
+    local v17 = v0(workspace, "Map");
+    local v18 = v0(v14, "EnemySpawns");
+    local v19 = v0(v14, "Locations");
+    local v20 = v6.RenderStepped;
+    local v21 = v6.Heartbeat;
+    local v22 = v6.Stepped;
+    local v23 = v0(v4, "Modules");
+    local v24 = v0(v23, "Net");
+    local v25 = sethiddenproperty or function(...)
+        return ...;
+    end;
+    local v26 = setupvalue or (debug and debug.setupvalue);
+    local v27 = getupvalue or (debug and debug.getupvalue);
+    local v28 = { AutoClick = true, ClickDelay = 0 };
+    local v29 = {};
+
+    v29.AttackCooldown = 0;
+    v29.Connections = {};
+    v29.IsAlive = function(v41)
+        return v41 and v41:FindFirstChild("Humanoid") and (v41.Humanoid.Health > 0);
+    end;
+
+    local function v33(v42)
+        return v42 ~= v8;
+    end
+
+    v29.FastAttack = (function()
+        if _ENV.rz_FastAttack then
+            return _ENV.rz_FastAttack;
+        end
+        local v43 = {
+            Distance = 100,
+            attackMobs = true,
+            attackPlayers = true,
+            Equipped = nil,
+            Debounce = 0,
+            ComboDebounce = 0,
+            M1Combo = 0,
+            EnemyRootPart = nil,
+            HitboxLimbs = { "RightLowerArm", "RightUpperArm", "LeftLowerArm", "LeftUpperArm", "RightHand", "LeftHand" }
+        };
+
+        local v44 = v0(v24, "RE/RegisterAttack");
+        local v45 = v0(v24, "RE/RegisterHit");
+        local v46 = v0(v4, "Events");
+        local v47, v48 = pcall(function()
+            return require(v23.Flags).COMBAT_REMOTE_THREAD or false;
+        end);
+        local v49;
+
+        task.defer(function()
+            local v62 = v8:WaitForChild("PlayerScripts");
+            local v63 = v62:FindFirstChildOfClass("LocalScript");
+            while not v63 do
+                v8.PlayerScripts.ChildAdded:Wait();
+                v63 = v62:FindFirstChildOfClass("LocalScript");
+            end
+            if getsenv then
+                local v126, v127 = pcall(getsenv, v63);
+                if (v126 and v127) then
+                    v49 = v127._G.SendHitsToServer;
+                end
+            end
+        end);
+
+        -- Sửa hàm Process: tham số đầu tiên là self (v43)
+        v43.Process = function(self, container, hitsTable, originPos, range)
+            if not container then
+                return;
+            end
+            local limbs = self.HitboxLimbs;
+            local children = container:GetChildren();
+            for i = 1, #children do
+                local child = children[i];
+                local targetPart = child:FindFirstChild(limbs[math.random(#limbs)]) or child:FindFirstChild("HumanoidRootPart") or child.PrimaryPart;
+                if not targetPart then
+                    continue;
+                end
+                local isPlayer = (child.Parent == v15) and v33(v7:GetPlayerFromCharacter(child));
+                if ((child ~= v8.Character) and ((child.Parent ~= v15) or isPlayer)) then
+                    if (v29.IsAlive(child) and ((originPos - targetPart.Position).Magnitude <= range)) then
+                        if not self.EnemyRootPart then
+                            self.EnemyRootPart = targetPart;
+                        else
+                            table.insert(hitsTable, { child, targetPart });
+                        end
+                    end
+                end
+            end
+        end;
+
+        v43.GetAllBladeHits = function(self, target, range)
+            local origin = target:GetPivot().Position;
+            local hits = {};
+            range = range or self.Distance;
+            -- Gọi Process với container tương ứng
+            self:Process(v16, hits, origin, range);
+            self:Process(v15, hits, origin, range);
+            return hits;
+        end;
+
+        v43.GetClosestEnemy = function(self, target, range)
+            local hits = self:GetAllBladeHits(target, range);
+            local closestDist = math.huge;
+            local closestPart = nil;
+            for i = 1, #hits do
+                local dist = (closestPart and (closestPart.Position - hits[i][2].Position).Magnitude) or closestDist;
+                if dist <= closestDist then
+                    closestDist = dist;
+                    closestPart = hits[i][2];
+                end
+            end
+            return closestPart;
+        end;
+
+        v43.GetCombo = function(self)
+            local combo = (((tick() - self.ComboDebounce) <= 0.4) and self.M1Combo) or 0;
+            combo = ((combo >= 4) and 1) or (combo + 1);
+            self.ComboDebounce = tick();
+            self.M1Combo = combo;
+            return combo;
+        end;
+
+        v43.UseFruitM1 = function(self, character, tool, combo)
+            local origin = character:GetPivot().Position;
+            local enemies = v16:GetChildren();
+            for i = 1, #enemies do
+                local enemy = enemies[i];
+                local part = enemy.PrimaryPart or enemy:FindFirstChild("HumanoidRootPart");
+                if (v29.IsAlive(enemy) and part and ((part.Position - origin).Magnitude <= 50)) then
+                    local direction = (part.Position - origin).Unit;
+                    if tool.LeftClickRemote then
+                        tool.LeftClickRemote:FireServer(direction, combo);
+                    end
+                    return;
+                end
+            end
+        end;
+
+        v43.UseNormalClick = function(self, character, tool, combo)
+            self.EnemyRootPart = nil;
+            local hits = self:GetAllBladeHits(character);
+            local enemyPart = self.EnemyRootPart;
+            if enemyPart then
+                if (v47 and v48 and v49) then
+                    if v44 then v44:FireServer(combo); end
+                    v49(enemyPart, hits);
+                elseif (v47 and not v48) then
+                    if v44 then v44:FireServer(combo); end
+                    if v45 then v45:FireServer(enemyPart, hits); end
+                else
+                    v2:SendMouseButtonEvent(0, 0, 0, true, game, 1);
+                    task.wait(0.05);
+                    v2:SendMouseButtonEvent(0, 0, 0, false, game, 1);
+                end
+            end
+        end;
+
+        v43.CheckStun = function(self, weaponType, character, humanoid)
+            local stunNames = { "Stun", "Stun Value", "StunValue" };
+            for _, name in ipairs(stunNames) do
+                local stun = character:FindFirstChild(name);
+                if stun and stun.Value > 0 then
+                    return false;
+                end
+            end
+            return true;
+        end;
+
+        v43.Attack = function(self)
+            if (not v28.AutoClick or ((tick() - v29.AttackCooldown) <= 1)) then
+                return;
+            end
+            if not v29.IsAlive(v8.Character) then
+                return;
+            end
+            local character = v8.Character;
+            local humanoid = character.Humanoid;
+            local tool = character:FindFirstChildOfClass("Tool");
+            if not tool then
+                return;
+            end
+            local toolTip = tool.ToolTip;
+            local toolName = tool.Name;
+            if not ((toolTip == "Melee") or (toolTip == "Blox Fruit") or (toolTip == "Sword")) then
+                return nil;
+            end
+            local cooldownVal = (tool:FindFirstChild("Cooldown") and tool.Cooldown.Value) or 0.3;
+            if ((tick() - self.Debounce) >= cooldownVal and self:CheckStun(toolTip, character, humanoid)) then
+                local combo = self:GetCombo();
+                cooldownVal = cooldownVal + (((combo >= 4) and 0.05) or 0);
+                self.Equipped = tool;
+                self.Debounce = ((combo >= 4) and (tick() + 0.05)) or tick();
+                if toolTip == "Blox Fruit" then
+                    if (toolName == "Ice-Ice") or (toolName == "Light-Light") then
+                        return self:UseNormalClick(character, tool, combo);
+                    elseif tool:FindFirstChild("LeftClickRemote") then
+                        return self:UseFruitM1(character, tool, combo);
+                    end
+                else
+                    return self:UseNormalClick(character, tool, combo);
+                end
+            end
+        end;
+
+        v43.AttackNearest = function(self)
+            self:Attack();
+        end;
+
+        v43.BladeHits = function(self)
+            self:Attack();
+        end;
+
+        task.spawn(function()
+            while task.wait(v28.ClickDelay) do
+                if v28.AutoClick then
+                    v43:Attack();
+                end
+            end
+        end);
+
+        table.insert(v29.Connections, v22:Connect(function()
+            v43:Attack();
+        end));
+
+        _ENV.rz_FastAttack = v43;
+        return v43;
+    end)(); -- Kết thúc hàm và gọi ngay
+
+end -- Kết thúc if _G.FastAttack
